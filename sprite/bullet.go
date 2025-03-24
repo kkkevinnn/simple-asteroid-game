@@ -36,7 +36,7 @@ func (b *Bullet) GetHitboxCircule() (p utils.Vector2, r int) {
 	return b.Center, b.Radius
 }
 
-func (b *Bullet) HitboxCollision(h Hitbox) bool {
+func (b *Bullet) HitboxCollision(h Collidable) bool {
 	bPos, bRad := b.GetHitboxCircule()
 	hPos, hRad := h.GetHitboxCircule()
 

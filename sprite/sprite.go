@@ -31,7 +31,7 @@ func (p *Point) Clamp(bounds image.Rectangle) {
 	p.Y = utils.Clamp(p.Y, bounds.Min.Y, bounds.Max.Y)
 }
 
-type Hitbox interface {
-	GetHitboxCircule() (p utils.Vector2, r int)
-	HitboxCollision(h *Hitbox) bool
+type Collidable interface {
+	GetHitboxCircule() (utils.Vector2, int)
+	IsCollided(h Collidable) bool
 }

@@ -42,7 +42,7 @@ type Player struct {
 	Speed         float64
 	RotationSpeed float64
 
-	gun GunConfig
+	Gun GunConfig
 
 	lastFired time.Time
 }
@@ -58,7 +58,7 @@ func NewPlayer(center utils.Vector2, radius int, bounds image.Rectangle, speed f
 		Bounds:        newBounds,
 		Speed:         speed,
 		RotationSpeed: rotationSpeed,
-		gun:           gun,
+		Gun:           gun,
 	}
 }
 
@@ -66,13 +66,13 @@ func (p *Player) Update(keys []ebiten.Key) {
 	for _, k := range keys {
 		switch k {
 		case ebiten.KeyW:
-			p.move(MoveForward, p.Speed*dt)
+			p.Move(MoveForward, p.Speed*dt)
 		case ebiten.KeyS:
-			p.move(MoveBackward, p.Speed*dt)
+			p.Move(MoveBackward, p.Speed*dt)
 		case ebiten.KeyA:
-			p.rotate(RotateAntiClockwise, p.RotationSpeed*dt)
+			p.Rotate(RotateAntiClockwise, p.RotationSpeed*dt)
 		case ebiten.KeyD:
-			p.rotate(RotateClockwise, p.RotationSpeed*dt)
+			p.Rotate(RotateClockwise, p.RotationSpeed*dt)
 		}
 	}
 	newPos := &Point{X: int(math.Round(p.Center.X)), Y: int(math.Round(p.Center.Y))}
@@ -118,7 +118,7 @@ func (p *Player) GetHitboxCircule() (utils.Vector2, int) {
 	return p.Center, p.Radius
 }
 
-func (p *Player) HitboxCollision(h Hitbox) bool {
+func (p *Player) IsCollided(h Collidable) bool {
 	pPos, pRad := p.GetHitboxCircule()
 	hPos, hRad := h.GetHitboxCircule()
 
@@ -127,17 +127,17 @@ func (p *Player) HitboxCollision(h Hitbox) bool {
 }
 
 func (p *Player) Fire() (*Bullet, error) {
-	if time.Since(p.lastFired) < p.gun.RateLimit {
+	if time.Since(p.lastFired) < p.Gun.RateLimit {
 		return nil, ErrGunNotReady
 	}
 	p.lastFired = time.Now()
 	gunPos := p.Triangle()[0]
 	dir := (&utils.Vector2{X: 0, Y: -1}).Rotate(p.Rotation)
-	bullet := NewBullet(*gunPos, p.gun.Radius, p.gun.Speed, *dir)
+	bullet := NewBullet(*gunPos, p.Gun.Radius, p.Gun.Speed, *dir)
 	return bullet, nil
 }
 
-func (p *Player) move(direction MoveDirection, distance float64) {
+func (p *Player) Move(direction MoveDirection, distance float64) {
 	var v utils.Vector2
 	switch direction {
 	case MoveForward:
@@ -151,7 +151,7 @@ func (p *Player) move(direction MoveDirection, distance float64) {
 	p.Center.Add(v)
 }
 
-func (p *Player) rotate(direction RotateDirection, deg float64) {
+func (p *Player) Rotate(direction RotateDirection, deg float64) {
 	switch direction {
 	case RotateAntiClockwise:
 		p.Rotation = math.Mod(p.Rotation+deg, 360)

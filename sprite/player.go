@@ -5,17 +5,18 @@ import (
 	"errors"
 	"image"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 )
 
-var GunNotReadyError = errors.New("Gun is not ready yet")
+var ErrGunNotReady = errors.New("gun is not ready yet")
 
 type GunConfig struct {
 	Radius    int
 	Speed     float64
-	RateLimit float64
+	RateLimit time.Duration
 }
 
 type Player struct {
@@ -27,7 +28,9 @@ type Player struct {
 	Speed         float64
 	RotationSpeed float64
 
-	Gun GunConfig
+	gun GunConfig
+
+	lastFired time.Time
 }
 
 func NewPlayer(center utils.Vector2, radius int, bounds image.Rectangle, speed float64, rotationSpeed float64, gun GunConfig) *Player {
@@ -41,7 +44,7 @@ func NewPlayer(center utils.Vector2, radius int, bounds image.Rectangle, speed f
 		Bounds:        newBounds,
 		Speed:         speed,
 		RotationSpeed: rotationSpeed,
-		Gun:           gun,
+		gun:           gun,
 	}
 }
 
@@ -109,9 +112,13 @@ func (p *Player) HitboxCollision(h Hitbox) bool {
 	return dist < float64(pRad+hRad)
 }
 
-func (p *Player) Fire() *Bullet {
+func (p *Player) Fire() (*Bullet, error) {
+	if time.Since(p.lastFired) < p.gun.RateLimit {
+		return nil, ErrGunNotReady
+	}
+	p.lastFired = time.Now()
 	gunPos := p.Triangle()[0]
 	dir := (&utils.Vector2{X: 0, Y: -1}).Rotate(p.Rotation)
-	bullet := NewBullet(*gunPos, p.Gun.Radius, p.Gun.Speed, *dir)
-	return bullet
+	bullet := NewBullet(*gunPos, p.gun.Radius, p.gun.Speed, *dir)
+	return bullet, nil
 }

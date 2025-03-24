@@ -9,11 +9,11 @@ const (
 	ASTEROID_SPAWN_RATE = 0.8 // seconds
 	ASTEROID_MAX_RADIUS = ASTEROID_MIN_RADIUS * ASTEROID_KINDS
 
-	PLAYER_MOVE_SPEED     float64 = 6
+	PLAYER_MOVE_SPEED     float64 = 200
 	PLAYER_ROTATION_SPEED float64 = 300
 	PLAYER_RADUIS         int     = 20
-	PLAYER_FIRE_RATE      string  = "0.2s" // seconds
+	PLAYER_FIRE_RATE      string  = "0.1s" // seconds
 
-	BULLET_SPEED  float64 = 100
+	BULLET_SPEED  float64 = 400
 	BULLET_RADIUS int     = 5
 )

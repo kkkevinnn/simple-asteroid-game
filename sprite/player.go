@@ -19,6 +19,20 @@ type GunConfig struct {
 	RateLimit time.Duration
 }
 
+type MoveDirection int
+
+const (
+	MoveForward MoveDirection = iota
+	MoveBackward
+)
+
+type RotateDirection int
+
+const (
+	RotateAntiClockwise RotateDirection = iota
+	RotateClockwise
+)
+
 type Player struct {
 	Center   utils.Vector2
 	Radius   int
@@ -52,13 +66,13 @@ func (p *Player) Update(keys []ebiten.Key) {
 	for _, k := range keys {
 		switch k {
 		case ebiten.KeyW:
-			p.Center.Y -= p.Speed
+			p.move(MoveForward, p.Speed*dt)
 		case ebiten.KeyS:
-			p.Center.Y += p.Speed
+			p.move(MoveBackward, p.Speed*dt)
 		case ebiten.KeyA:
-			p.Rotation = math.Mod(p.Rotation+p.RotationSpeed*dt, 360)
+			p.rotate(RotateAntiClockwise, p.RotationSpeed*dt)
 		case ebiten.KeyD:
-			p.Rotation = math.Mod(p.Rotation-p.RotationSpeed*dt, 360)
+			p.rotate(RotateClockwise, p.RotationSpeed*dt)
 		}
 	}
 	newPos := &Point{X: int(math.Round(p.Center.X)), Y: int(math.Round(p.Center.Y))}
@@ -121,4 +135,29 @@ func (p *Player) Fire() (*Bullet, error) {
 	dir := (&utils.Vector2{X: 0, Y: -1}).Rotate(p.Rotation)
 	bullet := NewBullet(*gunPos, p.gun.Radius, p.gun.Speed, *dir)
 	return bullet, nil
+}
+
+func (p *Player) move(direction MoveDirection, distance float64) {
+	var v utils.Vector2
+	switch direction {
+	case MoveForward:
+		v = utils.Vector2{X: 0, Y: -1}
+	case MoveBackward:
+		v = utils.Vector2{X: 0, Y: 1}
+	default:
+		return
+	}
+	v.Rotate(p.Rotation).Scale(distance)
+	p.Center.Add(v)
+}
+
+func (p *Player) rotate(direction RotateDirection, deg float64) {
+	switch direction {
+	case RotateAntiClockwise:
+		p.Rotation = math.Mod(p.Rotation+deg, 360)
+	case RotateClockwise:
+		p.Rotation = math.Mod(p.Rotation-deg, 360)
+	default:
+		return
+	}
 }

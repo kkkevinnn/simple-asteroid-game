@@ -24,33 +24,10 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	center := utils.Vector2{
-		X: constant.SCREEN_WIDTH / 2,
-		Y: constant.SCREEN_HEIGHT / 2,
-	}
-	bounds := image.Rect(0, 0, constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT)
-	rate, err := time.ParseDuration(constant.PLAYER_FIRE_RATE)
-	if err != nil {
-		log.Fatal(err)
-	}
-	gun := sprite.GunConfig{
-		Radius:    constant.BULLET_RADIUS,
-		Speed:     constant.BULLET_SPEED,
-		RateLimit: rate,
-	}
-	player := sprite.NewPlayer(center, constant.PLAYER_RADUIS, bounds, constant.PLAYER_MOVE_SPEED, constant.PLAYER_ROTATION_SPEED, gun)
-	asteroidCtrl := sprite.NewAsteroidControl(
-		constant.ASTEROID_MIN_RADIUS,
-		constant.ASTEROID_MAX_RADIUS,
-		constant.ASTEROID_KINDS,
-		bounds,
-		constant.ASTEROID_SPAWN_RATE,
-	)
+	game := &Game{}
+	game.Reset()
 
-	return &Game{
-		player:       *player,
-		asteroidCtrl: *asteroidCtrl,
-	}
+	return game
 }
 
 func (g *Game) Update() error {
@@ -65,9 +42,12 @@ func (g *Game) Update() error {
 	go g.updateBullets(wg)
 
 	wg.Wait()
-	// collision detection
 
-	// spwan asteroids
+	// collision detection
+	if g.IsPlayerCollidedWithAsteroid() {
+		g.Reset()
+		return nil
+	}
 
 	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
 
@@ -129,4 +109,43 @@ func (g *Game) Fire() {
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT
+}
+
+func (g *Game) Reset() {
+	center := utils.Vector2{
+		X: constant.SCREEN_WIDTH / 2,
+		Y: constant.SCREEN_HEIGHT / 2,
+	}
+	bounds := image.Rect(0, 0, constant.SCREEN_WIDTH, constant.SCREEN_HEIGHT)
+	rate, err := time.ParseDuration(constant.PLAYER_FIRE_RATE)
+	if err != nil {
+		log.Fatal(err)
+	}
+	gun := sprite.GunConfig{
+		Radius:    constant.BULLET_RADIUS,
+		Speed:     constant.BULLET_SPEED,
+		RateLimit: rate,
+	}
+	player := sprite.NewPlayer(center, constant.PLAYER_RADUIS, bounds, constant.PLAYER_MOVE_SPEED, constant.PLAYER_ROTATION_SPEED, gun)
+	asteroidCtrl := sprite.NewAsteroidControl(
+		constant.ASTEROID_MIN_RADIUS,
+		constant.ASTEROID_MAX_RADIUS,
+		constant.ASTEROID_KINDS,
+		bounds,
+		constant.ASTEROID_SPAWN_RATE,
+	)
+
+	g.player = *player
+	g.asteroidCtrl = *asteroidCtrl
+	g.bullets = make([]*sprite.Bullet, 0)
+}
+
+func (g *Game) IsPlayerCollidedWithAsteroid() bool {
+	for _, a := range g.asteroidCtrl.Asteroids {
+		if g.player.IsCollided(a) {
+			log.Printf("Player(%.2f, %.2f) collided with Asteroid(%.2f, %.2f)", g.player.Center.X, g.player.Center.Y, a.Center.X, a.Center.Y)
+			return true
+		}
+	}
+	return false
 }

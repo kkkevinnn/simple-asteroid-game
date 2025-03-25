@@ -123,7 +123,7 @@ func (p *Player) IsCollided(h Collidable) bool {
 	hPos, hRad := h.GetHitboxCircule()
 
 	dist := utils.Distance(pPos.X, pPos.Y, hPos.X, hPos.Y)
-	return dist < float64(pRad+hRad)
+	return dist <= float64(pRad+hRad)
 }
 
 func (p *Player) Fire() (*Bullet, error) {

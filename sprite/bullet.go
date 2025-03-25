@@ -36,10 +36,10 @@ func (b *Bullet) GetHitboxCircule() (p utils.Vector2, r int) {
 	return b.Center, b.Radius
 }
 
-func (b *Bullet) HitboxCollision(h Collidable) bool {
+func (b *Bullet) IsCollided(h Collidable) bool {
 	bPos, bRad := b.GetHitboxCircule()
 	hPos, hRad := h.GetHitboxCircule()
 
 	dist := utils.Distance(bPos.X, bPos.Y, hPos.X, hPos.Y)
-	return dist < float64(bRad+hRad)
+	return dist <= float64(bRad+hRad)
 }

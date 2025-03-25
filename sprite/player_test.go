@@ -251,7 +251,7 @@ func TestIsCollided(t *testing.T) {
 				Center: utils.Vector2{X: 130, Y: 100},
 				Radius: 10,
 			},
-			collided: false,
+			collided: true,
 		},
 	}
 

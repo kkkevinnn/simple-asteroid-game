@@ -71,3 +71,14 @@ func (v *Vector2) Reverse() *Vector2 {
 	v.Y = -v.Y
 	return v
 }
+
+func (v *Vector2) Normalize() *Vector2 {
+	if v.X == 0 && v.Y == 0 {
+		return v
+	}
+
+	l := v.Length()
+	v.X /= l
+	v.Y /= l
+	return v
+}

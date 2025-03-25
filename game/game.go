@@ -17,11 +17,10 @@ import (
 )
 
 type Game struct {
-	mouse     sprite.Point
-	player    sprite.Player
-	asteroids []*sprite.Asteriod
-	bullets   []*sprite.Bullet
-	keys      []ebiten.Key
+	player       sprite.Player
+	asteroidCtrl sprite.AsteroidControl
+	bullets      []*sprite.Bullet
+	keys         []ebiten.Key
 }
 
 func NewGame() *Game {
@@ -40,21 +39,21 @@ func NewGame() *Game {
 		RateLimit: rate,
 	}
 	player := sprite.NewPlayer(center, constant.PLAYER_RADUIS, bounds, constant.PLAYER_MOVE_SPEED, constant.PLAYER_ROTATION_SPEED, gun)
+	asteroidCtrl := sprite.NewAsteroidControl(
+		constant.ASTEROID_MIN_RADIUS,
+		constant.ASTEROID_MAX_RADIUS,
+		constant.ASTEROID_KINDS,
+		bounds,
+		constant.ASTEROID_SPAWN_RATE,
+	)
+
 	return &Game{
-		player: *player,
+		player:       *player,
+		asteroidCtrl: *asteroidCtrl,
 	}
 }
 
 func (g *Game) Update() error {
-	g.mouse.X, g.mouse.Y = ebiten.CursorPosition()
-	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
-
-	for _, k := range g.keys {
-		switch k {
-		case ebiten.KeySpace:
-			g.Fire()
-		}
-	}
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go g.updatePlayer(wg)
@@ -70,17 +69,24 @@ func (g *Game) Update() error {
 
 	// spwan asteroids
 
+	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+
+	for _, k := range g.keys {
+		switch k {
+		case ebiten.KeySpace:
+			g.Fire()
+		}
+	}
+
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("%d, %d", g.mouse.X, g.mouse.Y))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.2f, %.2f", g.player.Center.X, g.player.Center.Y))
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("FPS: %.2f", ebiten.ActualFPS()), constant.SCREEN_WIDTH-70, 10)
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %.2f", ebiten.ActualTPS()), constant.SCREEN_WIDTH-70, 0)
 	g.player.Draw(screen)
-	for _, a := range g.asteroids {
-		a.Draw(screen)
-	}
+	g.asteroidCtrl.Draw(screen)
 	for _, b := range g.bullets {
 		b.Draw(screen)
 	}
@@ -93,9 +99,7 @@ func (g *Game) updatePlayer(wg *sync.WaitGroup) {
 
 func (g *Game) updateAsteroids(wg *sync.WaitGroup) {
 	defer wg.Done()
-	for _, a := range g.asteroids {
-		a.Update()
-	}
+	g.asteroidCtrl.Update()
 }
 
 func (g *Game) updateBullets(wg *sync.WaitGroup) {

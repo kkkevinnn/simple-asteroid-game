@@ -200,3 +200,27 @@ func TestReverse(t *testing.T) {
 		})
 	}
 }
+
+func TestNormalize(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		name string
+		v    Vector2
+		want Vector2
+	}{
+		{"(0, 0)", Vector2{0, 0}, Vector2{0, 0}},
+		{"(1, 0)", Vector2{1, 0}, Vector2{1, 0}},
+		{"(0, 1)", Vector2{0, 1}, Vector2{0, 1}},
+		{"(1, 1)", Vector2{1, 1}, Vector2{0.707106, 0.707106}},
+		{"(2, 2)", Vector2{2, 2}, Vector2{0.707106, 0.707106}},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			c.v.Normalize()
+			assert.InDelta(c.want.X, c.v.X, 0.00001)
+			assert.InDelta(c.want.Y, c.v.Y, 0.00001)
+		})
+	}
+}

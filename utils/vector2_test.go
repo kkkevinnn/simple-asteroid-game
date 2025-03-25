@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"image"
 	"math"
 	"testing"
 
@@ -110,6 +111,70 @@ func TestCopy(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			assert.Equal(t, c.want, *c.v.Copy(), "The copy of v(%v) should be %v but got %v", c.v, c.want, c.v.Copy())
+		})
+	}
+}
+
+func TestClampVector2(t *testing.T) {
+	assert := assert.New(t)
+
+	testBox := image.Rect(0, 0, 10, 10)
+	cases := []struct {
+		name     string
+		vector2  Vector2
+		expected Vector2
+	}{
+		{
+			name:     "vector2 inside box",
+			vector2:  Vector2{X: 5, Y: 5},
+			expected: Vector2{X: 5, Y: 5},
+		},
+		{
+			name:     "vector2 over box",
+			vector2:  Vector2{X: 5, Y: -5},
+			expected: Vector2{X: 5, Y: 0},
+		},
+		{
+			name:     "vector2 under box",
+			vector2:  Vector2{X: 5, Y: 15},
+			expected: Vector2{X: 5, Y: 10},
+		},
+		{
+			name:     "vector2 left of box",
+			vector2:  Vector2{X: -5, Y: 5},
+			expected: Vector2{X: 0, Y: 5},
+		},
+		{
+			name:     "vector2 right of box",
+			vector2:  Vector2{X: 15, Y: 5},
+			expected: Vector2{X: 10, Y: 5},
+		},
+		{
+			name:     "vector2 top left of box",
+			vector2:  Vector2{X: -5, Y: -5},
+			expected: Vector2{X: 0, Y: 0},
+		},
+		{
+			name:     "vector2 top right of box",
+			vector2:  Vector2{X: 15, Y: -5},
+			expected: Vector2{X: 10, Y: 0},
+		},
+		{
+			name:     "vector2 bottom left of box",
+			vector2:  Vector2{X: -5, Y: 15},
+			expected: Vector2{X: 0, Y: 10},
+		},
+		{
+			name:     "vector2 bottom right of box",
+			vector2:  Vector2{X: 15, Y: 15},
+			expected: Vector2{X: 10, Y: 10},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			c.vector2.Clamp(testBox)
+			assert.Equal(c.expected, c.vector2, "The point should be clamped to the box")
 		})
 	}
 }

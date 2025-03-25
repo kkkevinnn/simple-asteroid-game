@@ -97,7 +97,7 @@ func TestUpdate(t *testing.T) {
 		keys     []ebiten.Key
 		expected utils.Vector2
 	}{
-		{"move forward", []ebiten.Key{ebiten.KeyW}, utils.Vector2{X: 100, Y: 98}},
+		{"move forward", []ebiten.Key{ebiten.KeyW}, utils.Vector2{X: 100, Y: 98.33333}},
 		{"move backward", []ebiten.Key{ebiten.KeyS}, utils.Vector2{X: 100, Y: 100}},
 		{"rotate anti-clockwise", []ebiten.Key{ebiten.KeyA}, utils.Vector2{X: 100, Y: 100}},
 		{"rotate clockwise", []ebiten.Key{ebiten.KeyD}, utils.Vector2{X: 100, Y: 100}},
@@ -106,7 +106,8 @@ func TestUpdate(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			p.Update(c.keys)
-			assert.Equal(c.expected, p.Center)
+			assert.InDelta(c.expected.X, p.Center.X, 0.0001)
+			assert.InDelta(c.expected.Y, p.Center.Y, 0.0001)
 		})
 	}
 

@@ -1,6 +1,9 @@
 package utils
 
-import "math"
+import (
+	"image"
+	"math"
+)
 
 type Vector2 struct {
 	X, Y float64
@@ -55,4 +58,9 @@ func (v *Vector2) Length() float64 {
 // Copy returns a copy of the vector.
 func (v *Vector2) Copy() *Vector2 {
 	return NewVector2(v.X, v.Y)
+}
+
+func (v *Vector2) Clamp(bounds image.Rectangle) {
+	v.X = Clamp(v.X, float64(bounds.Min.X), float64(bounds.Max.X))
+	v.Y = Clamp(v.Y, float64(bounds.Min.X), float64(bounds.Max.Y))
 }

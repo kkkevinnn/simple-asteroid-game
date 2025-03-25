@@ -75,9 +75,7 @@ func (p *Player) Update(keys []ebiten.Key) {
 			p.Rotate(RotateClockwise, p.RotationSpeed*dt)
 		}
 	}
-	newPos := &Point{X: int(math.Round(p.Center.X)), Y: int(math.Round(p.Center.Y))}
-	newPos.Clamp(p.Bounds)
-	p.Center.X, p.Center.Y = float64(newPos.X), float64(newPos.Y)
+	p.Center.Clamp(p.Bounds)
 }
 
 func (p *Player) Triangle() [3]*utils.Vector2 {

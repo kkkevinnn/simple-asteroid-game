@@ -26,7 +26,11 @@ func TestMove(t *testing.T) {
 		{"move backward", utils.Vector2{X: 0, Y: 0}, sprite.MoveBackward, 1, utils.Vector2{X: 0, Y: 1}},
 	}
 
-	p := &sprite.Player{}
+	p := &sprite.Player{
+		Circle: sprite.Circle{
+			Direction: utils.Vector2{X: 0, Y: -1},
+		},
+	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			p.Center = c.center
@@ -40,22 +44,23 @@ func TestRotate(t *testing.T) {
 	assert := assert.New(t)
 
 	cases := []struct {
-		name      string
-		rotation  float64
-		direction sprite.RotateDirection
-		deg       float64
-		want      float64
+		name         string
+		rotDirection sprite.RotateDirection
+		deg          float64
+		oriDirection utils.Vector2
+		want         utils.Vector2
 	}{
-		{"rotate clockwise", 0, sprite.RotateClockwise, 90, -90},
-		{"rotate anticlockwise", 0, sprite.RotateAntiClockwise, 90, 90},
+		{"rotate clockwise", sprite.RotateClockwise, 90, utils.Vector2{X: 0, Y: -1}, utils.Vector2{X: 1, Y: 0}},
+		{"rotate anticlockwise", sprite.RotateAntiClockwise, 90, utils.Vector2{X: 0, Y: -1}, utils.Vector2{X: -1, Y: 0}},
 	}
 
 	p := &sprite.Player{}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			p.Rotation = c.rotation
-			p.Rotate(c.direction, c.deg)
-			assert.Equal(c.want, p.Rotation)
+			p.Direction = c.oriDirection
+			p.Rotate(c.rotDirection, c.deg)
+			assert.InDelta(c.want.X, p.Direction.X, 0.00001)
+			assert.InDelta(c.want.Y, p.Direction.Y, 0.00001)
 		})
 	}
 }
@@ -74,8 +79,9 @@ func TestNewPlayer(t *testing.T) {
 
 	assert.Equal(center, player.Center)
 	assert.Equal(radius, player.Radius)
-	assert.Equal(image.Rect(radius, radius, 640-radius, 480-radius), player.Bounds)
 	assert.Equal(speed, player.Speed)
+	assert.Equal(utils.Vector2{X: 0, Y: -1}, player.Direction)
+	assert.Equal(image.Rect(radius, radius, 640-radius, 480-radius), player.Bounds)
 	assert.Equal(rotationSpeed, player.RotationSpeed)
 	assert.Equal(gunConfig, player.Gun)
 }
@@ -87,27 +93,39 @@ func TestUpdate(t *testing.T) {
 	radius := 20
 	bounds := image.Rect(0, 0, 640, 480)
 	speed := 100.0
-	rotationSpeed := 3.0
+	rotationSpeed := 300.0
 	gun := sprite.GunConfig{Radius: 5, Speed: 10.0, RateLimit: time.Millisecond * 500}
 
 	p := sprite.NewPlayer(center, radius, bounds, speed, rotationSpeed, gun)
 
-	cases := []struct {
+	type Case struct {
 		name     string
 		keys     []ebiten.Key
 		expected utils.Vector2
-	}{
+	}
+	moveCases := []Case{
 		{"move forward", []ebiten.Key{ebiten.KeyW}, utils.Vector2{X: 100, Y: 98.33333}},
 		{"move backward", []ebiten.Key{ebiten.KeyS}, utils.Vector2{X: 100, Y: 100}},
-		{"rotate anti-clockwise", []ebiten.Key{ebiten.KeyA}, utils.Vector2{X: 100, Y: 100}},
-		{"rotate clockwise", []ebiten.Key{ebiten.KeyD}, utils.Vector2{X: 100, Y: 100}},
 	}
 
-	for _, c := range cases {
+	for _, c := range moveCases {
 		t.Run(c.name, func(t *testing.T) {
 			p.Update(c.keys)
 			assert.InDelta(c.expected.X, p.Center.X, 0.0001)
 			assert.InDelta(c.expected.Y, p.Center.Y, 0.0001)
+		})
+	}
+
+	rotateCases := []Case{
+		{"rotate anti-clockwise", []ebiten.Key{ebiten.KeyA}, utils.Vector2{X: -0.08715, Y: -0.99619}},
+		{"rotate clockwise", []ebiten.Key{ebiten.KeyD}, utils.Vector2{X: 0, Y: -1}},
+	}
+
+	for _, c := range rotateCases {
+		t.Run(c.name, func(t *testing.T) {
+			p.Update(c.keys)
+			assert.InDelta(c.expected.X, p.Direction.X, 0.0001)
+			assert.InDelta(c.expected.Y, p.Direction.Y, 0.0001)
 		})
 	}
 
@@ -128,23 +146,23 @@ func TestTriangle(t *testing.T) {
 	center := utils.Vector2{X: 100, Y: 100}
 	radius := 30
 	bounds := image.Rect(0, 0, 640, 480)
-	rotation := float64(0)
 
 	p := &sprite.Player{
-		Center:   center,
-		Radius:   radius,
-		Bounds:   bounds,
-		Rotation: rotation,
+		Circle: sprite.Circle{
+			Center: center,
+			Radius: radius,
+		},
+		Bounds: bounds,
 	}
 
 	cases := []struct {
-		name     string
-		rotation float64
-		vertices [3]*utils.Vector2
+		name      string
+		direction utils.Vector2
+		vertices  [3]*utils.Vector2
 	}{
 		{
-			name:     "Rotation 0",
-			rotation: 0,
+			name:      "Rotation 0",
+			direction: utils.Vector2{X: 0, Y: -1},
 			vertices: [3]*utils.Vector2{
 				{X: 100, Y: 70},
 				{X: 120, Y: 130},
@@ -152,8 +170,8 @@ func TestTriangle(t *testing.T) {
 			},
 		},
 		{
-			name:     "Rotation 90",
-			rotation: 90,
+			name:      "Rotation 90",
+			direction: utils.Vector2{X: 1, Y: 0},
 			vertices: [3]*utils.Vector2{
 				{X: 130, Y: 100},
 				{X: 70, Y: 120},
@@ -161,8 +179,8 @@ func TestTriangle(t *testing.T) {
 			},
 		},
 		{
-			name:     "Rotation 180",
-			rotation: 180,
+			name:      "Rotation 180",
+			direction: utils.Vector2{X: 0, Y: 1},
 			vertices: [3]*utils.Vector2{
 				{X: 100, Y: 130},
 				{X: 80, Y: 70},
@@ -170,8 +188,8 @@ func TestTriangle(t *testing.T) {
 			},
 		},
 		{
-			name:     "Rotation 270",
-			rotation: 270,
+			name:      "Rotation 270",
+			direction: utils.Vector2{X: -1, Y: 0},
 			vertices: [3]*utils.Vector2{
 				{X: 70, Y: 100},
 				{X: 130, Y: 80},
@@ -182,13 +200,14 @@ func TestTriangle(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			p.Rotation = c.rotation
+			p.Direction = c.direction
 			assert.Equal(c.vertices, p.Triangle())
 		})
 	}
 
 	t.Run("Rotation 45", func(t *testing.T) {
-		p.Rotation = 45
+		// for drawing, y-axis is inverted. Thus the expected values are inverted
+		p.Direction = *utils.NewVector2(1, 0).Rotate(-45)
 		expected := [3]*utils.Vector2{
 			{X: 121.21320, Y: 78.786796564},
 			{X: 92.9289321, Y: 135.3553390},
@@ -207,8 +226,10 @@ func TestGetHitboxCircle(t *testing.T) {
 	center := utils.Vector2{X: 100, Y: 100}
 	radius := 20
 	p := &sprite.Player{
-		Center: center,
-		Radius: radius,
+		Circle: sprite.Circle{
+			Center: center,
+			Radius: radius,
+		},
 	}
 
 	pos, rad := p.GetHitboxCircule()
@@ -221,8 +242,10 @@ func TestIsCollided(t *testing.T) {
 	assert := assert.New(t)
 
 	p := &sprite.Player{
-		Center: utils.Vector2{X: 100, Y: 100},
-		Radius: 20,
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: 100, Y: 100},
+			Radius: 20,
+		},
 	}
 	// Test cases
 	cases := []struct {
@@ -268,9 +291,11 @@ func TestFire(t *testing.T) {
 	assert := assert.New(t)
 	gunConfig := sprite.GunConfig{Radius: 5, Speed: 10.0, RateLimit: time.Millisecond * 500}
 	p := &sprite.Player{
-		Center: utils.Vector2{X: 100, Y: 100},
-		Radius: 20,
-		Gun:    gunConfig,
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: 100, Y: 100},
+			Radius: 20,
+		},
+		Gun: gunConfig,
 	}
 
 	// First fire

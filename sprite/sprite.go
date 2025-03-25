@@ -22,15 +22,6 @@ func init() {
 	whiteImage.Fill(color.White)
 }
 
-type Point struct {
-	X, Y int
-}
-
-func (p *Point) Clamp(bounds image.Rectangle) {
-	p.X = utils.Clamp(p.X, bounds.Min.X, bounds.Max.X)
-	p.Y = utils.Clamp(p.Y, bounds.Min.Y, bounds.Max.Y)
-}
-
 type Collidable interface {
 	GetHitboxCircule() (utils.Vector2, int)
 	IsCollided(h Collidable) bool

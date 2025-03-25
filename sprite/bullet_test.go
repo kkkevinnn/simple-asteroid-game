@@ -49,8 +49,10 @@ func TestBulletGetHitboxCircule(t *testing.T) {
 	center := utils.Vector2{X: 100, Y: 100}
 	radius := 5
 	bullet := &sprite.Bullet{
-		Center: center,
-		Radius: radius,
+		Circle: sprite.Circle{
+			Center: center,
+			Radius: radius,
+		},
 	}
 	pos, rad := bullet.GetHitboxCircule()
 
@@ -62,8 +64,10 @@ func TestBulletHitboxCollision(t *testing.T) {
 	assert := assert.New(t)
 
 	b := &sprite.Bullet{
-		Center: utils.Vector2{X: 100, Y: 100},
-		Radius: 20,
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: 100, Y: 100},
+			Radius: 20,
+		},
 	}
 	// Test cases
 	cases := []struct {

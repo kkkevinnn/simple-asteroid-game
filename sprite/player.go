@@ -4,7 +4,6 @@ import (
 	"asteroid/utils"
 	"errors"
 	"image"
-	"math"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -34,12 +33,9 @@ const (
 )
 
 type Player struct {
-	Center   utils.Vector2
-	Radius   int
-	Bounds   image.Rectangle
-	Rotation float64
+	Circle
 
-	Speed         float64
+	Bounds        image.Rectangle
 	RotationSpeed float64
 
 	Gun GunConfig
@@ -52,14 +48,19 @@ func NewPlayer(center utils.Vector2, radius int, bounds image.Rectangle, speed f
 		Min: image.Point{X: bounds.Min.X + radius, Y: bounds.Min.Y + radius},
 		Max: image.Point{X: bounds.Max.X - radius, Y: bounds.Max.Y - radius},
 	}
-	return &Player{
-		Center:        center,
-		Radius:        radius,
+	p := Player{
+		Circle: Circle{
+			Center:    center,
+			Radius:    radius,
+			Speed:     speed,
+			Direction: utils.Vector2{X: 0, Y: -1},
+		},
 		Bounds:        newBounds,
-		Speed:         speed,
 		RotationSpeed: rotationSpeed,
 		Gun:           gun,
 	}
+
+	return &p
 }
 
 func (p *Player) Update(keys []ebiten.Key) {
@@ -79,15 +80,13 @@ func (p *Player) Update(keys []ebiten.Key) {
 }
 
 func (p *Player) Triangle() [3]*utils.Vector2 {
-	forward := &utils.Vector2{X: 0, Y: -1}
-	forward.Rotate(float64(p.Rotation)).Scale(float64(p.Radius))
+	forward := p.Direction.Clone().Scale(float64(p.Radius))
 
-	right := &utils.Vector2{X: 0, Y: 1}
-	right.Rotate(float64(p.Rotation + 90)).Scale(float64(p.Radius) / 1.5)
+	right := p.Direction.Clone().Reverse().Rotate(90).Scale(float64(p.Radius) / 1.5)
 
-	a := p.Center.Copy().Add(*forward)
-	b := p.Center.Copy().Sub(*forward).Sub(*right)
-	c := p.Center.Copy().Sub(*forward).Add(*right)
+	a := p.Center.Clone().Add(*forward)
+	b := p.Center.Clone().Sub(*forward).Sub(*right)
+	c := p.Center.Clone().Sub(*forward).Add(*right)
 
 	return [3]*utils.Vector2{a, b, c}
 }
@@ -112,49 +111,38 @@ func (p *Player) Draw(screen *ebiten.Image) {
 	screen.DrawTriangles(vertices, indices, whiteSubImage, op)
 }
 
-func (p *Player) GetHitboxCircule() (utils.Vector2, int) {
-	return p.Center, p.Radius
-}
-
-func (p *Player) IsCollided(h Collidable) bool {
-	pPos, pRad := p.GetHitboxCircule()
-	hPos, hRad := h.GetHitboxCircule()
-
-	dist := utils.Distance(pPos.X, pPos.Y, hPos.X, hPos.Y)
-	return dist <= float64(pRad+hRad)
-}
-
 func (p *Player) Fire() (*Bullet, error) {
 	if time.Since(p.lastFired) < p.Gun.RateLimit {
 		return nil, ErrGunNotReady
 	}
 	p.lastFired = time.Now()
 	gunPos := p.Triangle()[0]
-	dir := (&utils.Vector2{X: 0, Y: -1}).Rotate(p.Rotation)
+	dir := p.Direction.Clone()
 	bullet := NewBullet(*gunPos, p.Gun.Radius, p.Gun.Speed, *dir)
 	return bullet, nil
 }
 
 func (p *Player) Move(direction MoveDirection, distance float64) {
-	var v utils.Vector2
+	var v *utils.Vector2
 	switch direction {
 	case MoveForward:
-		v = utils.Vector2{X: 0, Y: -1}
+		v = p.Direction.Clone().Scale(distance)
 	case MoveBackward:
-		v = utils.Vector2{X: 0, Y: 1}
+		v = p.Direction.Clone().Reverse().Scale(distance)
 	default:
 		return
 	}
-	v.Rotate(p.Rotation).Scale(distance)
-	p.Center.Add(v)
+
+	p.Center.Add(*v)
 }
 
 func (p *Player) Rotate(direction RotateDirection, deg float64) {
+	// for drawing, y-axis is inverted. Thus the expected values are inverted
 	switch direction {
 	case RotateAntiClockwise:
-		p.Rotation = math.Mod(p.Rotation+deg, 360)
+		p.Direction.Rotate(-deg)
 	case RotateClockwise:
-		p.Rotation = math.Mod(p.Rotation-deg, 360)
+		p.Direction.Rotate(deg)
 	default:
 		return
 	}

@@ -55,12 +55,19 @@ func (v *Vector2) Length() float64 {
 	return math.Sqrt(v.X*v.X + v.Y*v.Y)
 }
 
-// Copy returns a copy of the vector.
-func (v *Vector2) Copy() *Vector2 {
+// Clone returns a clone of the vector.
+func (v *Vector2) Clone() *Vector2 {
 	return NewVector2(v.X, v.Y)
 }
 
+// Clamp clamps the vector to the given bounds.
 func (v *Vector2) Clamp(bounds image.Rectangle) {
 	v.X = Clamp(v.X, float64(bounds.Min.X), float64(bounds.Max.X))
 	v.Y = Clamp(v.Y, float64(bounds.Min.X), float64(bounds.Max.Y))
+}
+
+func (v *Vector2) Reverse() *Vector2 {
+	v.X = -v.X
+	v.Y = -v.Y
+	return v
 }

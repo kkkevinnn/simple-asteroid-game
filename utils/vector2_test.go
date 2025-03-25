@@ -98,7 +98,7 @@ func TestLength(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
+func TestClone(t *testing.T) {
 	cases := []struct {
 		name string
 		v    Vector2
@@ -110,7 +110,7 @@ func TestCopy(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			assert.Equal(t, c.want, *c.v.Copy(), "The copy of v(%v) should be %v but got %v", c.v, c.want, c.v.Copy())
+			assert.Equal(t, c.want, *c.v.Clone(), "The copy of v(%v) should be %v but got %v", c.v, c.want, c.v.Clone())
 		})
 	}
 }
@@ -175,6 +175,28 @@ func TestClampVector2(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			c.vector2.Clamp(testBox)
 			assert.Equal(c.expected, c.vector2, "The point should be clamped to the box")
+		})
+	}
+}
+
+func TestReverse(t *testing.T) {
+	assert := assert.New(t)
+
+	cases := []struct {
+		name string
+		v    Vector2
+		want Vector2
+	}{
+		{"(0, 0)", Vector2{0, 0}, Vector2{0, 0}},
+		{"(1, 0)", Vector2{1, 0}, Vector2{-1, 0}},
+		{"(0, 1)", Vector2{0, 1}, Vector2{0, -1}},
+		{"(1, 1)", Vector2{1, 1}, Vector2{-1, -1}},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			c.v.Reverse()
+			assert.Equal(c.want, c.v)
 		})
 	}
 }

@@ -23,6 +23,7 @@ func TestNewAsteroid(t *testing.T) {
 	assert.Equal(radius, asteroid.Radius)
 	assert.Equal(speed, asteroid.Speed)
 	assert.Equal(direction, asteroid.Direction)
+	assert.Equal(false, asteroid.IsDestoryed())
 }
 
 func TestAsteroidUpdate(t *testing.T) {
@@ -107,4 +108,17 @@ func TestAsteroidHitboxCollision(t *testing.T) {
 			assert.Equal(c.collided, collided)
 		})
 	}
+}
+
+func TestAsteroidDestory(t *testing.T) {
+	assert := assert.New(t)
+
+	a := &sprite.Asteroid{
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: 100, Y: 100},
+			Radius: 20,
+		},
+	}
+	a.Destory()
+	assert.Equal(true, a.IsDestoryed())
 }

@@ -12,7 +12,7 @@ import (
 	"asteroid/utils"
 )
 
-func TestMove(t *testing.T) {
+func TestPlayerMove(t *testing.T) {
 	assert := assert.New(t)
 
 	cases := []struct {
@@ -40,7 +40,7 @@ func TestMove(t *testing.T) {
 	}
 }
 
-func TestRotate(t *testing.T) {
+func TestPlayerRotate(t *testing.T) {
 	assert := assert.New(t)
 
 	cases := []struct {
@@ -86,7 +86,7 @@ func TestNewPlayer(t *testing.T) {
 	assert.Equal(gunConfig, player.Gun)
 }
 
-func TestUpdate(t *testing.T) {
+func TestPlayerUpdate(t *testing.T) {
 	assert := assert.New(t)
 
 	center := utils.Vector2{X: 100, Y: 100}
@@ -140,7 +140,7 @@ func TestUpdate(t *testing.T) {
 	})
 }
 
-func TestTriangle(t *testing.T) {
+func TestPlayerTriangle(t *testing.T) {
 	assert := assert.New(t)
 
 	center := utils.Vector2{X: 100, Y: 100}
@@ -220,7 +220,7 @@ func TestTriangle(t *testing.T) {
 	})
 }
 
-func TestGetHitboxCircle(t *testing.T) {
+func TestPlayerGetHitboxCircle(t *testing.T) {
 	assert := assert.New(t)
 
 	center := utils.Vector2{X: 100, Y: 100}
@@ -238,7 +238,7 @@ func TestGetHitboxCircle(t *testing.T) {
 	assert.Equal(radius, rad)
 }
 
-func TestIsCollided(t *testing.T) {
+func TestPlayerIsCollided(t *testing.T) {
 	assert := assert.New(t)
 
 	p := &sprite.Player{
@@ -287,7 +287,7 @@ func TestIsCollided(t *testing.T) {
 	}
 }
 
-func TestFire(t *testing.T) {
+func TestPlayerFire(t *testing.T) {
 	assert := assert.New(t)
 	gunConfig := sprite.GunConfig{Radius: 5, Speed: 10.0, RateLimit: time.Millisecond * 500}
 	p := &sprite.Player{

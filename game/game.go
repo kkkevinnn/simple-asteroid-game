@@ -19,7 +19,7 @@ import (
 type Game struct {
 	player       sprite.Player
 	asteroidCtrl sprite.AsteroidControl
-	bullets      []*sprite.Bullet
+	bulletCtrl   sprite.BulletControl
 	keys         []ebiten.Key
 }
 
@@ -31,16 +31,15 @@ func NewGame() *Game {
 }
 
 func (g *Game) Update() error {
+	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go g.updatePlayer(wg)
-
 	wg.Add(1)
 	go g.updateAsteroids(wg)
-
 	wg.Add(1)
 	go g.updateBullets(wg)
-
 	wg.Wait()
 
 	// collision detection
@@ -48,14 +47,13 @@ func (g *Game) Update() error {
 		g.Reset()
 		return nil
 	}
+	g.CheckBulletCollidedWithAsteroid()
 
-	g.keys = inpututil.AppendPressedKeys(g.keys[:0])
+	g.bulletCtrl.Clean()
+	g.asteroidCtrl.Clean()
 
-	for _, k := range g.keys {
-		switch k {
-		case ebiten.KeySpace:
-			g.Fire()
-		}
+	if slices.Contains(g.keys, ebiten.KeySpace) {
+		g.Fire()
 	}
 
 	return nil
@@ -67,9 +65,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("TPS: %.2f", ebiten.ActualTPS()), constant.SCREEN_WIDTH-70, 0)
 	g.player.Draw(screen)
 	g.asteroidCtrl.Draw(screen)
-	for _, b := range g.bullets {
-		b.Draw(screen)
-	}
+	g.bulletCtrl.Draw(screen)
 }
 
 func (g *Game) updatePlayer(wg *sync.WaitGroup) {
@@ -84,16 +80,7 @@ func (g *Game) updateAsteroids(wg *sync.WaitGroup) {
 
 func (g *Game) updateBullets(wg *sync.WaitGroup) {
 	defer wg.Done()
-	for _, b := range g.bullets {
-		b.Update()
-	}
-	// remove bullets that are out of bounds
-	g.bullets = slices.DeleteFunc(g.bullets, func(el *sprite.Bullet) bool {
-		if el.Center.X < 0 || el.Center.X > constant.SCREEN_WIDTH || el.Center.Y < 0 || el.Center.Y > constant.SCREEN_HEIGHT {
-			return true
-		}
-		return false
-	})
+	g.bulletCtrl.Update()
 }
 
 func (g *Game) Fire() {
@@ -104,7 +91,7 @@ func (g *Game) Fire() {
 		}
 		log.Fatal(err)
 	}
-	g.bullets = append(g.bullets, bullet)
+	g.bulletCtrl.AddBullet(bullet)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -129,7 +116,6 @@ func (g *Game) Reset() {
 	player := sprite.NewPlayer(center, constant.PLAYER_RADUIS, bounds, constant.PLAYER_MOVE_SPEED, constant.PLAYER_ROTATION_SPEED, gun)
 	asteroidCtrl := sprite.NewAsteroidControl(
 		constant.ASTEROID_MIN_RADIUS,
-		constant.ASTEROID_MAX_RADIUS,
 		constant.ASTEROID_KINDS,
 		bounds,
 		constant.ASTEROID_SPAWN_RATE,
@@ -137,7 +123,7 @@ func (g *Game) Reset() {
 
 	g.player = *player
 	g.asteroidCtrl = *asteroidCtrl
-	g.bullets = make([]*sprite.Bullet, 0)
+	g.bulletCtrl = sprite.BulletControl{Bounds: bounds}
 }
 
 func (g *Game) IsPlayerCollidedWithAsteroid() bool {
@@ -148,4 +134,20 @@ func (g *Game) IsPlayerCollidedWithAsteroid() bool {
 		}
 	}
 	return false
+}
+
+func (g *Game) CheckBulletCollidedWithAsteroid() {
+	for i, b := range g.bulletCtrl.Bullets {
+		for j, a := range g.asteroidCtrl.Asteroids {
+			if b.IsDestoryed() || a.IsDestoryed() {
+				continue
+			}
+
+			if b.IsCollided(a) {
+				log.Printf("Bullet(%.2f, %.2f) collided with Asteroid(%.2f, %.2f)", b.Center.X, b.Center.Y, a.Center.X, a.Center.Y)
+				g.bulletCtrl.HitBullet(i)
+				g.asteroidCtrl.HitAsteroid(j)
+			}
+		}
+	}
 }

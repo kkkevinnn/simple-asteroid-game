@@ -12,8 +12,8 @@ const (
 	PLAYER_MOVE_SPEED     float64 = 200
 	PLAYER_ROTATION_SPEED float64 = 300
 	PLAYER_RADUIS         int     = 20
-	PLAYER_FIRE_RATE      string  = "0.1s" // seconds
+	PLAYER_FIRE_RATE      string  = "0.3s" // seconds
 
-	BULLET_SPEED  float64 = 400
+	BULLET_SPEED  float64 = 500
 	BULLET_RADIUS int     = 5
 )

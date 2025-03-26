@@ -23,6 +23,7 @@ func TestNewBullet(t *testing.T) {
 	assert.Equal(radius, bullet.Radius)
 	assert.Equal(speed, bullet.Speed)
 	assert.Equal(direction, bullet.Direction)
+	assert.Equal(false, bullet.IsDestoryed())
 }
 
 func TestBulletUpdate(t *testing.T) {
@@ -107,4 +108,17 @@ func TestBulletHitboxCollision(t *testing.T) {
 			assert.Equal(c.collided, collided)
 		})
 	}
+}
+
+func TestBulletDestory(t *testing.T) {
+	assert := assert.New(t)
+
+	b := &sprite.Bullet{
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: 100, Y: 100},
+			Radius: 20,
+		},
+	}
+	b.Destory()
+	assert.Equal(true, b.IsDestoryed())
 }

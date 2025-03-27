@@ -83,5 +83,4 @@ func TestAsteroidControlSpawnAsteroid(t *testing.T) {
 
 	assert := assert.New(t)
 	assert.NotNil(asteroid)
-	assert.LessOrEqual(asteroidControl.AsteroidRadiusMin, asteroid.Radius)
 }

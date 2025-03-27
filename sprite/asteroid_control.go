@@ -1,7 +1,6 @@
 package sprite
 
 import (
-	"asteroid/utils"
 	"image"
 	"log"
 	"math/rand/v2"
@@ -11,6 +10,7 @@ import (
 )
 
 type AsteroidControl struct {
+	AsteroidFactory   *AsteroidFactory
 	Asteroids         []*Asteroid
 	AsteroidRadiusMin int
 	AsteroidKind      int
@@ -25,6 +25,7 @@ func NewAsteroidControl(radiusMin int, kind int, bounds image.Rectangle, spwanRa
 		log.Fatal(err)
 	}
 	return &AsteroidControl{
+		AsteroidFactory:   NewAsteroidFactory(radiusMin, kind, bounds, 100, 40, 30),
 		AsteroidRadiusMin: radiusMin,
 		AsteroidKind:      kind,
 		Bounds:            bounds,
@@ -62,30 +63,8 @@ func (c *AsteroidControl) AddAsteroid(a *Asteroid) {
 }
 
 func (c *AsteroidControl) SpawnAsteroid() *Asteroid {
-	radius := rand.IntN(c.AsteroidKind+1) * c.AsteroidRadiusMin
-	speed := float64(randIntRange(40, 100))
-	angle := rand.NormFloat64() * 30
-
 	edge := rand.IntN(4)
-	var center utils.Vector2
-	var direction *utils.Vector2
-
-	switch edge {
-	case 0:
-		center = utils.Vector2{X: float64(randIntRange(radius, c.Bounds.Max.X-radius)), Y: 0}
-		direction = utils.NewVector2(0, 1).Rotate(angle)
-	case 1:
-		center = utils.Vector2{X: float64(c.Bounds.Max.X - radius), Y: float64(randIntRange(radius, c.Bounds.Max.Y-radius))}
-		direction = utils.NewVector2(-1, 0).Rotate(angle)
-	case 2:
-		center = utils.Vector2{X: float64(randIntRange(radius, c.Bounds.Max.X-radius)), Y: float64(c.Bounds.Max.Y - radius)}
-		direction = utils.NewVector2(0, -1).Rotate(angle)
-	case 3:
-		center = utils.Vector2{X: float64(c.Bounds.Min.X + radius), Y: float64(randIntRange(radius, c.Bounds.Max.Y-radius))}
-		direction = utils.NewVector2(1, 0).Rotate(angle)
-	}
-
-	return NewAsteroid(center, radius, speed, *direction)
+	return c.AsteroidFactory.NewAsteroid(edge)
 }
 
 func randIntRange(min, max int) int {

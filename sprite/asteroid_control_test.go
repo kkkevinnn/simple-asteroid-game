@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"asteroid/sprite"
+	"asteroid/utils"
 )
 
 func TestNewAsteroidControl(t *testing.T) {
@@ -25,10 +26,16 @@ func TestNewAsteroidControl(t *testing.T) {
 }
 
 func TestAsteroidControlUpdate(t *testing.T) {
-	asteroidControl := sprite.NewAsteroidControl(20, 3, image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}, "1s")
-	asteroidControl.Update()
+	ac := sprite.NewAsteroidControl(20, 3, image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}, "1s")
+	ac.Update()
+	assert := assert.New(t)
+	assert.Equal(1, len(ac.Asteroids))
 
-	assert.Equal(t, 1, len(asteroidControl.Asteroids))
+	ac.AddAsteroid(&sprite.Asteroid{Circle: sprite.Circle{Center: utils.Vector2{X: -100, Y: -100}}})
+	assert.Equal(2, len(ac.Asteroids))
+	ac.Update()
+	assert.Equal(2, len(ac.Asteroids))
+	assert.Equal(true, ac.Asteroids[1].IsDestoryed())
 }
 
 func TestAddAsteroid(t *testing.T) {
@@ -38,7 +45,7 @@ func TestAddAsteroid(t *testing.T) {
 	assert.Equal(t, 1, len(asteroidControl.Asteroids))
 }
 
-func TestAsteroidControlHitAsteroid_Clean(t *testing.T) {
+func TestAsteroidControlHitAsteroid(t *testing.T) {
 	asteroidControl := sprite.NewAsteroidControl(20, 3, image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}, "1s")
 	asteroidControl.AddAsteroid(&sprite.Asteroid{Circle: sprite.Circle{Radius: 40}})
 	asteroidControl.AddAsteroid(&sprite.Asteroid{Circle: sprite.Circle{Radius: 20}})
@@ -55,6 +62,19 @@ func TestAsteroidControlHitAsteroid_Clean(t *testing.T) {
 
 	asteroidControl.Clean()
 	assert.Equal(t, 3, len(asteroidControl.Asteroids))
+}
+
+func TestAsteroidControlClean(t *testing.T) {
+	ac := sprite.NewAsteroidControl(20, 3, image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}, "1s")
+	ac.AddAsteroid(&sprite.Asteroid{})
+	ac.AddAsteroid(&sprite.Asteroid{})
+
+	assert := assert.New(t)
+	ac.Clean()
+	assert.Equal(2, len(ac.Asteroids))
+	ac.Asteroids[0].Destory()
+	ac.Clean()
+	assert.Equal(1, len(ac.Asteroids))
 }
 
 func TestAsteroidControlSpawnAsteroid(t *testing.T) {

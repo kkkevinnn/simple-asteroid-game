@@ -37,6 +37,14 @@ func (c *AsteroidControl) Update() {
 		a.Update()
 	}
 
+	// remove bullets that are out of bounds
+	for _, a := range c.Asteroids {
+		if a.Center.X < -float64(a.Radius) || a.Center.X > float64(c.Bounds.Max.X+a.Radius) ||
+			a.Center.Y < -float64(a.Radius) || a.Center.Y > float64(c.Bounds.Max.Y+a.Radius) {
+			a.Destory()
+		}
+	}
+
 	if time.Since(c.lastSpwan) >= c.SpawnRate {
 		c.lastSpwan = time.Now()
 		c.AddAsteroid(c.SpawnAsteroid())
@@ -119,5 +127,8 @@ func (c *AsteroidControl) Clean() {
 		}
 	}
 
+	if cleaned := len(c.Asteroids) - mark; cleaned > 0 {
+		log.Printf("Cleaned %d asteroids out of %d\n", cleaned, len(c.Asteroids))
+	}
 	c.Asteroids = c.Asteroids[:mark]
 }

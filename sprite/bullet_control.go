@@ -2,6 +2,7 @@ package sprite
 
 import (
 	"image"
+	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -40,6 +41,9 @@ func (bc *BulletControl) Clean() {
 		}
 	}
 
+	if cleaned := len(bc.Bullets) - mark; cleaned > 0 {
+		log.Printf("Cleaned %d bullets out of %d\n", cleaned, len(bc.Bullets))
+	}
 	bc.Bullets = bc.Bullets[:mark]
 }
 
@@ -55,8 +59,8 @@ func (bc *BulletControl) Update() {
 	}
 	// remove bullets that are out of bounds
 	for _, b := range bc.Bullets {
-		if b.Center.X < 0 || b.Center.X > float64(bc.Bounds.Max.X) ||
-			b.Center.Y < 0 || b.Center.Y > float64(bc.Bounds.Max.Y) {
+		if b.Center.X < -float64(b.Radius) || b.Center.X > float64(bc.Bounds.Max.X+b.Radius) ||
+			b.Center.Y < -float64(b.Radius) || b.Center.Y > float64(bc.Bounds.Max.Y+b.Radius) {
 			b.Destory()
 		}
 	}

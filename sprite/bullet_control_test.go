@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"asteroid/sprite"
+	"asteroid/utils"
 )
 
 func TestNewBulletControl(t *testing.T) {
@@ -31,7 +32,7 @@ func TestBulletControlAddBullet(t *testing.T) {
 	assert.Equal(bullet, bulletControl.Bullets[0])
 }
 
-func TestBulletControlHitBullet_Clean(t *testing.T) {
+func TestBulletControlHitBullet(t *testing.T) {
 	bounds := image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}
 	bulletControl := sprite.NewBulletControl(bounds)
 
@@ -42,7 +43,44 @@ func TestBulletControlHitBullet_Clean(t *testing.T) {
 	bulletControl.HitBullet(0)
 	assert.Equal(2, len(bulletControl.Bullets))
 	assert.Equal(true, bulletControl.Bullets[0].IsDestoryed())
+}
 
-	bulletControl.Clean()
-	assert.Equal(1, len(bulletControl.Bullets))
+func TestBullectControlClean(t *testing.T) {
+	bounds := image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}
+	bc := sprite.NewBulletControl(bounds)
+
+	bc.AddBullet(&sprite.Bullet{})
+	bc.AddBullet(&sprite.Bullet{})
+
+	assert := assert.New(t)
+	bc.Clean()
+	assert.Equal(2, len(bc.Bullets))
+	bc.Bullets[0].Destory()
+	bc.Clean()
+	assert.Equal(1, len(bc.Bullets))
+}
+
+func TestBulletControlUpdate(t *testing.T) {
+	bounds := image.Rectangle{Max: image.Point{X: 1000, Y: 1000}}
+	bc := sprite.NewBulletControl(bounds)
+
+	oldCenter := utils.Vector2{X: 100, Y: 100}
+	bc.AddBullet(&sprite.Bullet{
+		Circle: sprite.Circle{
+			Center:    oldCenter,
+			Radius:    10,
+			Speed:     400,
+			Direction: utils.Vector2{X: 0, Y: -1},
+		},
+	})
+	bc.AddBullet(&sprite.Bullet{
+		Circle: sprite.Circle{
+			Center: utils.Vector2{X: -100, Y: -100},
+		},
+	})
+
+	assert := assert.New(t)
+	bc.Update()
+	assert.NotEqual(oldCenter, bc.Bullets[0].Circle.Center)
+	assert.Equal(true, bc.Bullets[1].IsDestoryed())
 }
